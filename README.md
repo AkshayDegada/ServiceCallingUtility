@@ -8,7 +8,9 @@ For using this Utility in your xcode project.
 Follow below steps:
 
 1) Add ServiceCallingUtitliy File in your xcode project and make sure you check copy file if needed.
+
 2) #import "ServiceCallingUtility.h" add this line where you want to call post or get web service.
+
 3) Add below code for calling web service:
 
   -> Add parameter in array which you want to call.
@@ -35,4 +37,13 @@ Follow below steps:
     
   Note: if you want to send only post parameters then you can pass "nil" in get parameters or visa versa.
   
+  After calling web services below are two delegate methods which invoke.
+  
+  When Connection Finish with Success:
+    
+    - (void) didSuccessRequest:(NSString *) notification withResponse:(NSString *) response;
+    
+  When Coonection Failed with Error:
+    
+    - (void) didFailedRequest:(NSString *) notification withError:(NSError *) error;
   
