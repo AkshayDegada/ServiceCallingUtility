@@ -22,6 +22,10 @@ typedef enum : NSUInteger {
     NSString * key;
     NSString * fileName;
     long valueType;
+    NSString * contentType;
+    
+    // In Seconds.
+    NSInteger timeoutTime;
 }
 
 @property (nonatomic,retain) id value;
@@ -35,5 +39,7 @@ typedef enum : NSUInteger {
 + (ServiceParameter *) getTextParameterKey:(NSString *) key andValue:(id) value;
 + (ServiceParameter *) getImageParameterKey:(NSString *) key withValue:(id) value andFileName:(NSString *) fileName;
 + (ServiceParameter *) getFileParameterKey:(NSString *) key withValue:(id) value andFileName:(NSString *) fileName;
+
++ (ServiceParameter *) getDirectHTTPPostBody:(id) value withContentType:(NSString *) contentType andTimeOutTime:(NSInteger) timeOut;
 
 @end
