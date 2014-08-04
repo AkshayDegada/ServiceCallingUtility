@@ -3,7 +3,7 @@
 //  test
 //
 //  Created by Minesh Purohit on 31/07/14.
-//  Copyright (c) 2014 Triforce Inc. All rights reserved.
+//  Copyright (c) 2014 MinuMaster. All rights reserved.
 //
 
 #import "ServiceParameter.h"
