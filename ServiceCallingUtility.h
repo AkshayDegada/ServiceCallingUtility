@@ -3,7 +3,7 @@
 //  test
 //
 //  Created by Minesh Purohit on 31/07/14.
-//  Copyright (c) 2014 Triforce Inc. All rights reserved.
+//  Copyright (c) 2014 MinuMaster. All rights reserved.
 //
 
 #import <Foundation/Foundation.h>
@@ -23,13 +23,13 @@
     NSMutableData * responseData;
     NSString * notification;
     
-    BOOL isEnableDebugMode;
+    BOOL isEnableDebugMode, sendDirectHTTPBody;
     
     id <ServiceCallingUtilityDelegate> delegate;
 }
 
 @property (nonatomic, retain) NSString * notificationName;
-@property (nonatomic, readwrite) BOOL isEnableDebugMode;
+@property (nonatomic, readwrite) BOOL isEnableDebugMode, sendDirectHTTPBody;
 @property (nonatomic, retain) id <ServiceCallingUtilityDelegate> delegate;
 
 -(void) doWebserviceCall:(NSString *)action withPostVars:(NSArray *)post_vars withGetVars:(NSArray *)get_vars andNotificationName:(NSString *) notificationName;
