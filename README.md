@@ -26,13 +26,20 @@ Follow below steps:
     // File type Parameter.
     [paramArray addObject:[ServiceParameter getFileParameterKey:@"<parameter-key>" withValue:@"<parameter-value as NSData>" andFileName:@"<file-name>"]];
     
+    // Direct HTTP Body Parameter
+    [paramArray addObject:[ServiceParameter getDirectHTTPPostBody:<parameter-value as id> withContentType:<parameter-ContentType as NSString> andTimeOutTime:<Timeout Time in Seconds as NSInteger>]];
     
     
   -> After adding parameters you can procceed to call request. Below code will call request asyncronus.
   
     ServiceCallingUtility * objCallService = [[ServiceCallingUtility alloc] init];
     objCallService.delegate = self;
+    
+    // this flag will enable Debuge Mode 
     objCallService.isEnableDebugMode = YES;
+    
+    // this flag used for send data in direct http post body with out any key. 
+    objCallService.sendDirectHTTPBody = NO;
     [objCallService doWebserviceCall:@"<URL-String>" withPostVars:<Post-Param-Array> withGetVars:<Get-Param-Array> andNotificationName:@"<Identifire-Key>"];
     
   Note: if you want to send only post parameters then you can pass "nil" in get parameters or visa versa.
