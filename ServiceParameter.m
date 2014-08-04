@@ -10,7 +10,7 @@
 
 @implementation ServiceParameter
 
-@synthesize value, key, valueType, fileName;
+@synthesize value, key, valueType, fileName, contentType, timeoutTime;
 
 
 + (ServiceParameter *) getTextParameterKey:(NSString *) key andValue:(id) value
@@ -39,6 +39,16 @@
     paramObj.value = value;
     paramObj.fileName = fileName;
     paramObj.valueType = SCTypeFile;
+    return paramObj;
+}
+
+
++ (ServiceParameter *) getDirectHTTPPostBody:(id) value withContentType:(NSString *) contentType andTimeOutTime:(NSInteger) timeOut
+{
+    ServiceParameter * paramObj = [[ServiceParameter alloc] init];
+    paramObj.value = value;
+    paramObj.contentType = contentType;
+    paramObj.timeoutTime = timeOut;
     return paramObj;
 }
 
