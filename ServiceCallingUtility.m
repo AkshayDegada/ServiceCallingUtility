@@ -10,7 +10,7 @@
 
 @implementation ServiceCallingUtility
 
-@synthesize delegate, isEnableDebugMode;
+@synthesize delegate, isEnableDebugMode, sendDirectHTTPBody;
 
 - (void) doWebserviceCall:(NSString *)action withPostVars:(NSArray *)post_vars withGetVars:(NSArray *)get_vars andNotificationName:(NSString *) notificationName
 {
@@ -54,119 +54,159 @@
     //adding get vars in url.
 	if ( (post_vars != nil) && ([post_vars count] > 0) )
 	{
-        // just some random text that will never occur in the body
-        NSString *stringBoundary = @"0xKhTmLbOuNdArY---This_Is_ThE_BoUnDaRyy---pqo";
-        
-        // header value
-        NSString *headerBoundary = [NSString stringWithFormat:@"multipart/form-data; boundary=%@",stringBoundary];
-        
-        // set header
-        [postRequest addValue:headerBoundary forHTTPHeaderField:@"Content-Type"];
-        
-        // create data
-        NSMutableData *postBody = [NSMutableData data];
-        
-		for (id param in post_vars)
+        if (sendDirectHTTPBody)
         {
-            if (![param isKindOfClass:[ServiceParameter class]]) {
-                NSLog(@"Web Service Only Accept \"ServiceParameter\" Objects.");
+            if ([post_vars count] > 1) {
+                NSLog(@"Direct HTTP Post body only accept One Service Parameter object.");
                 return;
             }
             
-            if ([(ServiceParameter *)param valueType] == SCTypeText)
+            if ([post_vars count] > 0)
             {
-                // Send Text Value in Key
-                [postBody appendData:[[NSString stringWithFormat:@"--%@\r\n", stringBoundary] dataUsingEncoding:NSUTF8StringEncoding]];
-                [postBody appendData:[[NSString stringWithFormat:@"Content-Disposition: form-data; name=\"%@\"\r\n\r\n",((ServiceParameter *)param).key] dataUsingEncoding:NSUTF8StringEncoding]];
-                [postBody appendData:[((ServiceParameter *)param).value dataUsingEncoding:NSUTF8StringEncoding]];
-                [postBody appendData:[@"\r\n" dataUsingEncoding:NSUTF8StringEncoding]];
-            }
-            else if ([(ServiceParameter *)param valueType] == SCTypeImage)
-            {
-                // Send Image Value in Key with Name
-                if ([((ServiceParameter *)param).value isKindOfClass:[UIImage class]])
-                {
-                    NSString * fileNameValue = [ServiceParameter getTextFromString:((ServiceParameter *)param).fileName];
-                    if ([fileNameValue length] > 0)
-                    {
-                        NSMutableArray * fileNameObject = [NSMutableArray arrayWithArray:[fileNameValue componentsSeparatedByString:@"."]];
-                        [fileNameObject removeLastObject];
-                        
-                        NSString * newFileName = [NSString stringWithFormat:@"%@.jpg",[fileNameObject componentsJoinedByString:@"."]];
-                        
-                        [postBody appendData:[[NSString stringWithFormat:@"--%@\r\n", stringBoundary] dataUsingEncoding:NSUTF8StringEncoding]];
-                        [postBody appendData:[[NSString stringWithFormat:@"Content-Disposition: form-data; name=\"%@\"; filename=\"%@\"\r\n", ((ServiceParameter *)param).key, newFileName] dataUsingEncoding:NSUTF8StringEncoding]];
-                        [postBody appendData:[@"Content-Type: image/jpeg\r\n" dataUsingEncoding:NSUTF8StringEncoding]];
-                        [postBody appendData:[@"Content-Transfer-Encoding: binary\r\n\r\n" dataUsingEncoding:NSUTF8StringEncoding]];
-                        NSData * imageData = UIImageJPEGRepresentation(((ServiceParameter *)param).value, .9);
-                        [postBody appendData:imageData];
-                        [postBody appendData:[[NSString stringWithFormat:@"\r\n"] dataUsingEncoding:NSUTF8StringEncoding]];
-                    }
-                    else
-                    {
-                        NSLog(@"File Name required for type \"SCTypeImage\".");
-                        return;
-                    }
-                }
-                else
-                {
-                    NSLog(@"Service Parameter Type \"SCTypeImage\" value only accept UIImage object.");
-                    return;
-                }
-            }
-            else if ([(ServiceParameter *)param valueType] == SCTypeFile)
-            {
+                id param = [post_vars objectAtIndex:0];
                 if ([((ServiceParameter *)param).value isKindOfClass:[NSData class]])
                 {
-                    // File Data Part
-                    
-                    NSString * fileNameValue = [ServiceParameter getTextFromString:((ServiceParameter *)param).fileName];
-                    if ([fileNameValue length] > 0)
+                    NSLog(@"Direct HTTP Post body only accept NSData object.");
+                    return;
+                }
+                
+                if (((ServiceParameter *)param).contentType == nil)
+                {
+                    NSLog(@"Direct HTTP Post must have content type value.");
+                    return;
+                }
+                
+                if ([((ServiceParameter *)param).contentType length] <= 0)
+                {
+                    NSLog(@"Direct HTTP Post must have content type value.");
+                    return;
+                }
+                
+                if (((ServiceParameter *)param).timeoutTime <= 0) {
+                    ((ServiceParameter *)param).timeoutTime = 15;
+                }
+                
+                [postRequest setHTTPBody:((ServiceParameter *)param).value];
+                [postRequest addValue:((ServiceParameter *)param).contentType forHTTPHeaderField:@"Content-Type"];
+                [postRequest setTimeoutInterval:((ServiceParameter *)param).timeoutTime];
+                
+            }
+        }
+        else
+        {
+            // just some random text that will never occur in the body
+            NSString *stringBoundary = @"0xKhTmLbOuNdArY---This_Is_ThE_BoUnDaRyy---pqo";
+            
+            // header value
+            NSString *headerBoundary = [NSString stringWithFormat:@"multipart/form-data; boundary=%@",stringBoundary];
+            
+            // set header
+            [postRequest addValue:headerBoundary forHTTPHeaderField:@"Content-Type"];
+            
+            // create data
+            NSMutableData *postBody = [NSMutableData data];
+            
+            for (id param in post_vars)
+            {
+                if (![param isKindOfClass:[ServiceParameter class]]) {
+                    NSLog(@"Web Service Only Accept \"ServiceParameter\" Objects.");
+                    return;
+                }
+                
+                if ([(ServiceParameter *)param valueType] == SCTypeText)
+                {
+                    // Send Text Value in Key
+                    [postBody appendData:[[NSString stringWithFormat:@"--%@\r\n", stringBoundary] dataUsingEncoding:NSUTF8StringEncoding]];
+                    [postBody appendData:[[NSString stringWithFormat:@"Content-Disposition: form-data; name=\"%@\"\r\n\r\n",((ServiceParameter *)param).key] dataUsingEncoding:NSUTF8StringEncoding]];
+                    [postBody appendData:[((ServiceParameter *)param).value dataUsingEncoding:NSUTF8StringEncoding]];
+                    [postBody appendData:[@"\r\n" dataUsingEncoding:NSUTF8StringEncoding]];
+                }
+                else if ([(ServiceParameter *)param valueType] == SCTypeImage)
+                {
+                    // Send Image Value in Key with Name
+                    if ([((ServiceParameter *)param).value isKindOfClass:[UIImage class]])
                     {
-                        NSString * contentType = [ServiceParameter getContentTypeForExtension:[[fileNameValue componentsSeparatedByString:@"."] lastObject]];
-                        
-                        if ([contentType length] > 0)
+                        NSString * fileNameValue = [ServiceParameter getTextFromString:((ServiceParameter *)param).fileName];
+                        if ([fileNameValue length] > 0)
                         {
-                            [postBody appendData:[[NSString stringWithFormat:@"--%@\r\n", stringBoundary] dataUsingEncoding:NSUTF8StringEncoding]];
-                            [postBody appendData:[[NSString stringWithFormat:@"Content-Disposition: form-data; name=\"%@\"; filename=\"%@\"\r\n", ((ServiceParameter *)param).key,((ServiceParameter *)param).fileName] dataUsingEncoding:NSUTF8StringEncoding]];
-                            [postBody appendData:[[NSString stringWithFormat:@"Content-Type: %@\r\n",contentType] dataUsingEncoding:NSUTF8StringEncoding]];
-                            [postBody appendData:[@"Content-Transfer-Encoding: binary\r\n\r\n" dataUsingEncoding:NSUTF8StringEncoding]];
-                            [postBody appendData:((ServiceParameter *)param).value];
+                            NSMutableArray * fileNameObject = [NSMutableArray arrayWithArray:[fileNameValue componentsSeparatedByString:@"."]];
+                            [fileNameObject removeLastObject];
                             
+                            NSString * newFileName = [NSString stringWithFormat:@"%@.jpg",[fileNameObject componentsJoinedByString:@"."]];
+                            
+                            [postBody appendData:[[NSString stringWithFormat:@"--%@\r\n", stringBoundary] dataUsingEncoding:NSUTF8StringEncoding]];
+                            [postBody appendData:[[NSString stringWithFormat:@"Content-Disposition: form-data; name=\"%@\"; filename=\"%@\"\r\n", ((ServiceParameter *)param).key, newFileName] dataUsingEncoding:NSUTF8StringEncoding]];
+                            [postBody appendData:[@"Content-Type: image/jpeg\r\n" dataUsingEncoding:NSUTF8StringEncoding]];
+                            [postBody appendData:[@"Content-Transfer-Encoding: binary\r\n\r\n" dataUsingEncoding:NSUTF8StringEncoding]];
+                            NSData * imageData = UIImageJPEGRepresentation(((ServiceParameter *)param).value, .9);
+                            [postBody appendData:imageData];
                             [postBody appendData:[[NSString stringWithFormat:@"\r\n"] dataUsingEncoding:NSUTF8StringEncoding]];
                         }
                         else
                         {
-                            NSLog(@"Invalid File Name for type \"SCTypeFile\".");
+                            NSLog(@"File Name required for type \"SCTypeImage\".");
                             return;
                         }
                     }
                     else
                     {
-                        NSLog(@"File Name required for type \"SCTypeFile\".");
+                        NSLog(@"Service Parameter Type \"SCTypeImage\" value only accept UIImage object.");
+                        return;
+                    }
+                }
+                else if ([(ServiceParameter *)param valueType] == SCTypeFile)
+                {
+                    if ([((ServiceParameter *)param).value isKindOfClass:[NSData class]])
+                    {
+                        // File Data Part
+                        
+                        NSString * fileNameValue = [ServiceParameter getTextFromString:((ServiceParameter *)param).fileName];
+                        if ([fileNameValue length] > 0)
+                        {
+                            NSString * contentType = [ServiceParameter getContentTypeForExtension:[[fileNameValue componentsSeparatedByString:@"."] lastObject]];
+                            
+                            if ([contentType length] > 0)
+                            {
+                                [postBody appendData:[[NSString stringWithFormat:@"--%@\r\n", stringBoundary] dataUsingEncoding:NSUTF8StringEncoding]];
+                                [postBody appendData:[[NSString stringWithFormat:@"Content-Disposition: form-data; name=\"%@\"; filename=\"%@\"\r\n", ((ServiceParameter *)param).key,((ServiceParameter *)param).fileName] dataUsingEncoding:NSUTF8StringEncoding]];
+                                [postBody appendData:[[NSString stringWithFormat:@"Content-Type: %@\r\n",contentType] dataUsingEncoding:NSUTF8StringEncoding]];
+                                [postBody appendData:[@"Content-Transfer-Encoding: binary\r\n\r\n" dataUsingEncoding:NSUTF8StringEncoding]];
+                                [postBody appendData:((ServiceParameter *)param).value];
+                                
+                                [postBody appendData:[[NSString stringWithFormat:@"\r\n"] dataUsingEncoding:NSUTF8StringEncoding]];
+                            }
+                            else
+                            {
+                                NSLog(@"Invalid File Name for type \"SCTypeFile\".");
+                                return;
+                            }
+                        }
+                        else
+                        {
+                            NSLog(@"File Name required for type \"SCTypeFile\".");
+                            return;
+                        }
+                    }
+                    else
+                    {
+                        NSLog(@"Service Parameter Type \"SCTypeFile\" value only accept NSData object.");
                         return;
                     }
                 }
                 else
                 {
-                    NSLog(@"Service Parameter Type \"SCTypeFile\" value only accept NSData object.");
+                    NSLog(@"Service Parameter Invalid valueType.");
                     return;
                 }
-            }
-            else
-            {
-                NSLog(@"Service Parameter Invalid valueType.");
-                return;
-            }
-		}//end while
-        
-        // final boundary
-        [postBody appendData:[[NSString stringWithFormat:@"--%@\r\n", stringBoundary] dataUsingEncoding:NSUTF8StringEncoding]];
-        //NSLog(@"%@",postBody);
-        
-        // add body to post
-        [postRequest setHTTPBody:postBody];
-        
+            }//end while
+            
+            // final boundary
+            [postBody appendData:[[NSString stringWithFormat:@"--%@\r\n", stringBoundary] dataUsingEncoding:NSUTF8StringEncoding]];
+            //NSLog(@"%@",postBody);
+            
+            // add body to post
+            [postRequest setHTTPBody:postBody];
+        }
 	}//end if
 	
 	// Asynch request
