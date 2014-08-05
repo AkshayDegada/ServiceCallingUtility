@@ -30,8 +30,9 @@ typedef enum : NSUInteger {
 
 @property (nonatomic,retain) id value;
 @property (nonatomic,retain) NSString * key;
-@property (nonatomic,retain) NSString * fileName;
+@property (nonatomic,retain) NSString * fileName, *contentType;
 @property (nonatomic,readwrite) long valueType;
+@property (nonatomic, readwrite) NSInteger timeoutTime;
 
 + (NSString *) getContentTypeForExtension:(NSString *) extension;
 + (NSString *) getTextFromString:(NSString *)strString;
