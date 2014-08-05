@@ -64,7 +64,7 @@
             if ([post_vars count] > 0)
             {
                 id param = [post_vars objectAtIndex:0];
-                if ([((ServiceParameter *)param).value isKindOfClass:[NSData class]])
+                if (![((ServiceParameter *)param).value isKindOfClass:[NSData class]])
                 {
                     NSLog(@"Direct HTTP Post body only accept NSData object.");
                     return;
@@ -90,6 +90,7 @@
                 [postRequest addValue:((ServiceParameter *)param).contentType forHTTPHeaderField:@"Content-Type"];
                 [postRequest setTimeoutInterval:((ServiceParameter *)param).timeoutTime];
                 
+                _intRequestDataSize = [(NSData *)((ServiceParameter *)param).value length];
             }
         }
         else
@@ -206,7 +207,10 @@
             
             // add body to post
             [postRequest setHTTPBody:postBody];
+            
+            _intRequestDataSize = [postBody length];
         }
+        
 	}//end if
 	
 	// Asynch request
@@ -251,6 +255,29 @@
         [delegate didSuccessRequest:notification withResponse:responseString];
     }
 }
+
+#pragma mark - NURLConnection Progress Methods
+
+- (void)connection:(NSURLConnection *)connection   didSendBodyData:(NSInteger)bytesWritten
+ totalBytesWritten:(NSInteger)totalBytesWritten
+totalBytesExpectedToWrite:(NSInteger)totalBytesExpectedToWrite
+{
+    
+    if ([delegate respondsToSelector:@selector(didSendRequest:progressPercentage:)])
+    {
+        // Calculate Completion Percentage
+		CGFloat fltComplete = 0;
+		if (totalBytesExpectedToWrite > 0) {
+			fltComplete = (1.0 * totalBytesWritten) / (1.0 * totalBytesExpectedToWrite);
+		} else if (_intRequestDataSize > 0) {
+			fltComplete = (1.0 * totalBytesWritten) / (1.0 * _intRequestDataSize);
+		}
+        
+        [delegate didSendRequest:notification progressPercentage:fltComplete];
+    }
+
+}
+
 
 #pragma mark - NURLConnection Authentication Methods
 
