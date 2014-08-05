@@ -53,4 +53,10 @@ Follow below steps:
   When Coonection Failed with Error:
     
     - (void) didFailedRequest:(NSString *) notification withError:(NSError *) error;
+    
+  If you want to show upload request progress then implement below delegate:
+  
+    - (void) didSendRequest:(NSString *)notification progressPercentage:(CGFloat)percentage;
+    
+
   
