@@ -15,6 +15,7 @@
 @optional
 - (void) didFailedRequest:(NSString *) notification withError:(NSError *) error;
 - (void) didSuccessRequest:(NSString *) notification withResponse:(NSString *) response;
+- (void) didSendRequest:(NSString *) notification progressPercentage:(CGFloat) percentage;
 
 @end
 
@@ -26,6 +27,8 @@
     BOOL isEnableDebugMode, sendDirectHTTPBody;
     
     id <ServiceCallingUtilityDelegate> delegate;
+    
+    long long _intRequestDataSize;
 }
 
 @property (nonatomic, retain) NSString * notificationName;
